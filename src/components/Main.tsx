@@ -6,6 +6,7 @@ import { Backdrop } from './common/Backdrop';
 import store from '../store'
 import { setStart } from '../features/gameSlice';
 import { css } from '@emotion/react'
+import { Reticle } from './Reticle';
 
 const Main: any = () => {
     const [isOpen, setIsOpen] = useState(false)
@@ -27,6 +28,7 @@ const Main: any = () => {
 
     return (
         <div>
+            <Reticle></Reticle>
             <Backdrop isOpen={isOpen} style={{ textAlign: "center", ...backdropStyle }}>
 
                 <MainTop>

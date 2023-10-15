@@ -91,7 +91,7 @@ class Scene {
 
     }
 
-    getCameraDirection() {        
+    private getCameraDirection() {        
         const vector = this.camera.getWorldDirection(new THREE.Vector3(0,0,0));
 
         return {
@@ -99,20 +99,20 @@ class Scene {
         }
     }
 
-    transformRadianTo2DPosition({ radian }: any) {
+    private transformRadianTo2DPosition({ radian }: any) {
         return {
             x: Math.cos(radian),
             y: Math.sin(radian)
         }
     }
 
-    transformPositionToRadian({ x, y }: any) {
+    private transformPositionToRadian({ x, y }: any) {
         return {
             radian: Math.atan2(x, y)
         }
     }
 
-    getRadianFromActiveKey() {
+    private getRadianFromActiveKey() {
         const totalDirection = {
             x: 0,
             y: 0
@@ -131,7 +131,7 @@ class Scene {
         return this.transformPositionToRadian(totalDirection).radian - Math.PI / 2
     }
 
-    getPlayerMovePosition() {
+    private getPlayerMovePosition() {
         const keyRadian = this.getRadianFromActiveKey()
         const radian = this.getCameraDirection().radian + keyRadian
         const position = this.transformRadianTo2DPosition({ radian: radian })
@@ -142,18 +142,18 @@ class Scene {
         }
     }
 
-    pushActiveKey({ keyCode }: any) {
+    private pushActiveKey({ keyCode }: any) {
         const set = new Set([...this.activeKeyDown,keyCode ]);
         const uniqueSet = Array.from(set);
         this.activeKeyDown = uniqueSet
     }
 
-    removeActiveKey({ keyCode }: any) {
+    private removeActiveKey({ keyCode }: any) {
         const index = this.activeKeyDown.indexOf(keyCode)
         if (index > -1) this.activeKeyDown.splice(index, 1)
     }
 
-    handleKeyDown(e: any) {
+    private handleKeyDown(e: any) {
         const speed = 0.1
         const functionKey: any = {
             "KeyW": () => {
@@ -164,29 +164,16 @@ class Scene {
             "KeyS": () => {
                 this.pushActiveKey({ keyCode: e.code })
                 this.player.isMove = true
-                // const radian = this.getCameraDirection().radian
-                // const position = this.transformRadianTo2DPosition({ radian: radian })
-                // this.player.velocity.x = - position.x * speed
-                // this.player.velocity.z = - position.y * speed
             },
             "KeyD": () => {
                 this.pushActiveKey({ keyCode: e.code })
                 this.player.isMove = true
-                // const radian = this.getCameraDirection().radian + Math.PI / 2
-                // const position = this.transformRadianTo2DPosition({ radian: radian })
-                // this.player.velocity.x = position.x * speed
-                // this.player.velocity.z = position.y * speed
             },
             "KeyA": () => {
                 this.pushActiveKey({ keyCode: e.code })
                 this.player.isMove = true
-                // const radian = this.getCameraDirection().radian + Math.PI / 2
-                // const position = this.transformRadianTo2DPosition({ radian: radian })
-                // this.player.velocity.x = - position.x * speed
-                // this.player.velocity.z = - position.y * speed
             }
         }
-
 
         if (functionKey[e.code] == undefined) {
             return 0
@@ -195,23 +182,19 @@ class Scene {
         functionKey[e.code]()
     }
 
-    handleKeyUp(e: any) {
+    private handleKeyUp(e: any) {
         const functionKey: any = {
             "KeyA": () => {
                 this.removeActiveKey({ keyCode: e.code })
-                console.log("A")
             },
             "KeyD": () => {
                 this.removeActiveKey({ keyCode: e.code })
-                console.log("A")
             },
             "KeyW": () => {
                 this.removeActiveKey({ keyCode: e.code })
-                console.log("A")
             },
             "KeyS": () => {
                 this.removeActiveKey({ keyCode: e.code })
-                console.log("A")
             }
         }
 
@@ -219,7 +202,6 @@ class Scene {
             this.player.isMove = false
         }
 
-
         if (functionKey[e.code] == undefined) {
             return 0
         }
@@ -228,7 +210,7 @@ class Scene {
     }
 
 
-    playerMove() {
+    private  playerMove() {
         if (this.activeKeyDown.length == 0) {
             this.player.isMove = false
         }
@@ -261,8 +243,6 @@ class Scene {
 
         this.playerMove()
 
-        // console.log(this.camera.rotation.z)
-        console.log(this.activeKeyDown)
 
         this.renderer.render( this.scene, this.camera );
     }
