@@ -9,7 +9,7 @@ class Scene {
     camera: any
     renderer: any
     controls: any
-    
+
     player: Player;
     activeKeyDown: any[];
     isGameStart: boolean;
@@ -19,6 +19,7 @@ class Scene {
 
 
         this.isGameStart = false
+        this.activeKeyDown = []
 
 
         const screen = document.querySelector("#screen")
@@ -27,9 +28,8 @@ class Scene {
 
 
 
-        // document.addEventListener("keydown", this.handleKeyDown.bind(this))
-        // document.addEventListener("keyup", this.handleKeyUp.bind(this))
-        // document.addEventListener("keypress", this.handleKeyPress.bind(this))
+        document.addEventListener("keydown", this.handleKeyDown.bind(this))
+        document.addEventListener("keyup", this.handleKeyUp.bind(this))
 
         // screen.addEventListener("touchstart", this.handleTouchDown.bind(this));
         // screen.addEventListener("touchend", this.handleTouchUp.bind(this));
@@ -79,8 +79,6 @@ class Scene {
     
         const helper = new THREE.CameraHelper( dirLight.shadow.camera );
         this.scene.add( helper );
-
-
         
         this.animate();
 
@@ -93,6 +91,163 @@ class Scene {
 
     }
 
+    getCameraDirection() {        
+        const vector = this.camera.getWorldDirection(new THREE.Vector3(0,0,0));
+
+        return {
+            radian: Math.atan2(vector.z, vector.x) 
+        }
+    }
+
+    transformRadianTo2DPosition({ radian }: any) {
+        return {
+            x: Math.cos(radian),
+            y: Math.sin(radian)
+        }
+    }
+
+    transformPositionToRadian({ x, y }: any) {
+        return {
+            radian: Math.atan2(x, y)
+        }
+    }
+
+    getRadianFromActiveKey() {
+        const totalDirection = {
+            x: 0,
+            y: 0
+        }
+        const direction: any = {
+            "KeyW": { x: 1, y: 0 },
+            "KeyS": { x: -1, y: 0 },
+            "KeyD": { x: 0, y: -1 },
+            "KeyA": { x: 0, y: 1 },
+        }
+        for (let index = 0; index < this.activeKeyDown.length; index++) {
+            totalDirection.x += direction[this.activeKeyDown[index]].x
+            totalDirection.y += direction[this.activeKeyDown[index]].y
+        }
+
+        return this.transformPositionToRadian(totalDirection).radian - Math.PI / 2
+    }
+
+    getPlayerMovePosition() {
+        const keyRadian = this.getRadianFromActiveKey()
+        const radian = this.getCameraDirection().radian + keyRadian
+        const position = this.transformRadianTo2DPosition({ radian: radian })
+
+        return {
+            x: position.x,
+            y: position.y
+        }
+    }
+
+    pushActiveKey({ keyCode }: any) {
+        const set = new Set([...this.activeKeyDown,keyCode ]);
+        const uniqueSet = Array.from(set);
+        this.activeKeyDown = uniqueSet
+    }
+
+    removeActiveKey({ keyCode }: any) {
+        const index = this.activeKeyDown.indexOf(keyCode)
+        if (index > -1) this.activeKeyDown.splice(index, 1)
+    }
+
+    handleKeyDown(e: any) {
+        const speed = 0.1
+        const functionKey: any = {
+            "KeyW": () => {
+                this.pushActiveKey({ keyCode: e.code })
+                this.player.isMove = true
+
+            },
+            "KeyS": () => {
+                this.pushActiveKey({ keyCode: e.code })
+                this.player.isMove = true
+                // const radian = this.getCameraDirection().radian
+                // const position = this.transformRadianTo2DPosition({ radian: radian })
+                // this.player.velocity.x = - position.x * speed
+                // this.player.velocity.z = - position.y * speed
+            },
+            "KeyD": () => {
+                this.pushActiveKey({ keyCode: e.code })
+                this.player.isMove = true
+                // const radian = this.getCameraDirection().radian + Math.PI / 2
+                // const position = this.transformRadianTo2DPosition({ radian: radian })
+                // this.player.velocity.x = position.x * speed
+                // this.player.velocity.z = position.y * speed
+            },
+            "KeyA": () => {
+                this.pushActiveKey({ keyCode: e.code })
+                this.player.isMove = true
+                // const radian = this.getCameraDirection().radian + Math.PI / 2
+                // const position = this.transformRadianTo2DPosition({ radian: radian })
+                // this.player.velocity.x = - position.x * speed
+                // this.player.velocity.z = - position.y * speed
+            }
+        }
+
+
+        if (functionKey[e.code] == undefined) {
+            return 0
+        }
+
+        functionKey[e.code]()
+    }
+
+    handleKeyUp(e: any) {
+        const functionKey: any = {
+            "KeyA": () => {
+                this.removeActiveKey({ keyCode: e.code })
+                console.log("A")
+            },
+            "KeyD": () => {
+                this.removeActiveKey({ keyCode: e.code })
+                console.log("A")
+            },
+            "KeyW": () => {
+                this.removeActiveKey({ keyCode: e.code })
+                console.log("A")
+            },
+            "KeyS": () => {
+                this.removeActiveKey({ keyCode: e.code })
+                console.log("A")
+            }
+        }
+
+        if (this.activeKeyDown.length == 0) {
+            this.player.isMove = false
+        }
+
+
+        if (functionKey[e.code] == undefined) {
+            return 0
+        }
+
+        functionKey[e.code]()
+    }
+
+
+    playerMove() {
+        if (this.activeKeyDown.length == 0) {
+            this.player.isMove = false
+        }
+        
+        if (this.player.isMove == false) {
+            return 0
+        }
+        const speed = 0.1
+
+        const position = this.getPlayerMovePosition()
+        this.player.velocity.x = position.x * speed
+        this.player.velocity.z = position.y * speed
+        
+        const x = this.camera.position.x + this.player.velocity.x
+        const y = this.camera.position.y + this.player.velocity.y
+        const z = this.camera.position.z + this.player.velocity.z
+
+        this.camera.position.set(x, y, z)
+    }
 
 
     private handleWindowResize() {
@@ -104,6 +259,10 @@ class Scene {
     private animate() {
         requestAnimationFrame( this.animate.bind(this) );
 
+        this.playerMove()
+
+        // console.log(this.camera.rotation.z)
+        console.log(this.activeKeyDown)
 
         this.renderer.render( this.scene, this.camera );
     }
