@@ -113,6 +113,7 @@ class Scene {
     }
 
     private getRadianFromActiveKey() {
+
         const totalDirection = {
             x: 0,
             y: 0
@@ -123,6 +124,7 @@ class Scene {
             "KeyD": { x: 0, y: -1 },
             "KeyA": { x: 0, y: 1 },
         }
+
         for (let index = 0; index < this.activeKeyDown.length; index++) {
             totalDirection.x += direction[this.activeKeyDown[index]].x
             totalDirection.y += direction[this.activeKeyDown[index]].y
@@ -155,11 +157,12 @@ class Scene {
 
     private handleKeyDown(e: any) {
         const speed = 0.1
+        console.log(e.code)
+
         const functionKey: any = {
             "KeyW": () => {
                 this.pushActiveKey({ keyCode: e.code })
                 this.player.isMove = true
-
             },
             "KeyS": () => {
                 this.pushActiveKey({ keyCode: e.code })
@@ -172,6 +175,10 @@ class Scene {
             "KeyA": () => {
                 this.pushActiveKey({ keyCode: e.code })
                 this.player.isMove = true
+            },
+            "Space": () => {
+                this.player.isJump = true
+
             }
         }
 
@@ -195,6 +202,10 @@ class Scene {
             },
             "KeyS": () => {
                 this.removeActiveKey({ keyCode: e.code })
+            },
+            "Space": () => {
+                this.player.isJump = false
+
             }
         }
 
@@ -210,7 +221,23 @@ class Scene {
     }
 
 
-    private  playerMove() {
+    //NOTE: 이후 콜리전 설정과 병합 필요 (임시책)
+    playerJump() {
+
+
+        if (this.player.isJump == true && this.camera.position.y < 5) {
+            this.camera.position.y += 0.1
+            this.player.velocity.y += 0.1
+        } else {
+            this.player.velocity.y = 0
+            this.camera.position.y -= this.camera.position.y > 3 ? 0.1 : 0
+        }
+    }
+
+
+    private playerMove() {
+
+
         if (this.activeKeyDown.length == 0) {
             this.player.isMove = false
         }
@@ -218,6 +245,10 @@ class Scene {
         if (this.player.isMove == false) {
             return 0
         }
+
+
+
+
         const speed = 0.1
 
         const position = this.getPlayerMovePosition()
@@ -242,6 +273,7 @@ class Scene {
         requestAnimationFrame( this.animate.bind(this) );
 
         this.playerMove()
+        this.playerJump()
 
 
         this.renderer.render( this.scene, this.camera );
