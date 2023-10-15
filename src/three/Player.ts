@@ -7,7 +7,7 @@ class Player {
     scene: any;
     isMove: boolean;
     radian: number;
-    force: number;
+    speed: number;
     isJump: boolean;
     velocity: { x: number; y: number; z: number; };
 
@@ -17,8 +17,7 @@ class Player {
         this.isMove = false
         this.isJump = false
 
-        this.radian = 0
-        this.force = 0
+        this.speed = 0.1
 
         this.velocity = {
             x: 0, 
@@ -32,16 +31,13 @@ class Player {
     }
 
 
-    public jump() {
-        this.isJump = true
-    }
- 
-    public setMove({ radian, force }: any) {
-
-        this.radian = radian
-        this.force = force
+    public speedUp() {
+        this.speed = 0.3
     }
 
+    public speedDown() {
+        this.speed = 0.1
+    }
 
 
 }

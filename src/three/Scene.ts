@@ -176,6 +176,9 @@ class Scene {
                 this.pushActiveKey({ keyCode: e.code })
                 this.player.isMove = true
             },
+            "ShiftLeft": () => {
+                this.player.speedUp()
+            },
             "Space": () => {
                 this.player.isJump = true
 
@@ -202,6 +205,9 @@ class Scene {
             },
             "KeyS": () => {
                 this.removeActiveKey({ keyCode: e.code })
+            },
+            "ShiftLeft": () => {
+                this.player.speedDown()
             },
             "Space": () => {
                 this.player.isJump = false
@@ -249,11 +255,9 @@ class Scene {
 
 
 
-        const speed = 0.1
-
         const position = this.getPlayerMovePosition()
-        this.player.velocity.x = position.x * speed
-        this.player.velocity.z = position.y * speed
+        this.player.velocity.x = position.x * this.player.speed
+        this.player.velocity.z = position.y * this.player.speed
         
         const x = this.camera.position.x + this.player.velocity.x
         const y = this.camera.position.y + this.player.velocity.y
