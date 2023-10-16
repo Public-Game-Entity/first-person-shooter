@@ -5,6 +5,10 @@ import { setGameOver } from '../features/gameSlice';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import { Collision } from './Collision';
 
+type BoxType = {
+    minX: number, minY: number, maxX: number, maxY: number
+}
+
 class Scene {
     scene: any
     camera: any
@@ -16,12 +20,14 @@ class Scene {
     isGameStart: boolean;
     lockControls: PointerLockControls;
     collisionDetect: Collision;
+    collisionArray: any[]
 
     constructor() {
 
 
         this.isGameStart = false
         this.activeKeyDown = []
+        this.collisionArray = []
 
 
         const screen = document.querySelector("#screen")
@@ -86,17 +92,33 @@ class Scene {
         this.collisionDetect = new Collision()
 
 
-        const geometry = new THREE.BoxGeometry( 1, 4, 4 ); 
-        const material = new THREE.MeshStandardMaterial()
-        material.metalness = 0.45
-        material.roughness = 0.65
-        
-        const cube = new THREE.Mesh( geometry, material ); 
-        cube.position.set(10,2,1)
-        cube.receiveShadow = true;
-        cube.castShadow = true;
+        const weight = {
+            x: 10,
+            y: 2,
+            z: 1,
 
-        this.scene.add(cube);
+            xw: 1,
+            yw: 4,
+            zw: 4
+        }
+
+
+        this.createCube({ weight: weight })
+        this.createCube({ weight: {
+            x: -10,
+            y: 2,
+            z: 10,
+
+            xw: 10,
+            yw: 40,
+            zw: 8
+        }})
+
+
+                //     minX: 9,
+        //     minY: -2,
+        //     maxX: 11,
+        //     maxY: 4
 
         this.animate();
 
@@ -109,6 +131,26 @@ class Scene {
             this.lockControls.lock()
         })
 
+    }
+
+    private createCube({ weight }: any) {
+        const geometry = new THREE.BoxGeometry( weight.xw, weight.yw, weight.zw ); 
+        const material = new THREE.MeshStandardMaterial()
+        material.metalness = 0.45
+        material.roughness = 0.65
+        
+        const cube = new THREE.Mesh( geometry, material ); 
+        cube.position.set(weight.x, weight.y, weight.z)
+        cube.receiveShadow = true;
+        cube.castShadow = true;
+        this.scene.add(cube);
+
+        this.collisionArray.push({
+            minX: weight.x - weight.xw/2 - 0.5, 
+            minY: weight.z - weight.zw/2 - 0.5,
+            maxX: weight.x + weight.xw/2 + 0.5, 
+            maxY: weight.z + weight.zw/2 + 0.5,
+        })
     }
 
     private getCameraDirection() {        
@@ -214,16 +256,36 @@ class Scene {
             return 0
         }
 
-        const isCollision: any = this.checkCollision()
 
 
         const position = this.getPlayerMovePosition()
-        this.player.velocity.x = (position.x * this.player.speed) * (isCollision ? -1.2 : 1)
-        this.player.velocity.z = (position.y * this.player.speed) * (isCollision ? -1.2 : 1)
+        this.player.velocity.x = (position.x * this.player.speed)  // * (isCollision ? -1 : 1)
+        this.player.velocity.z = (position.y * this.player.speed) 
         
-        const x = this.camera.position.x + this.player.velocity.x 
-        const y = this.camera.position.y + this.player.velocity.y
-        const z = this.camera.position.z + this.player.velocity.z
+        let x = this.camera.position.x + this.player.velocity.x 
+        let y = this.camera.position.y + this.player.velocity.y
+        let z = this.camera.position.z + this.player.velocity.z
+
+        for (let index = 0; index < this.collisionArray.length; index++) {
+            const box = this.collisionArray[index];
+            
+            const isCollision: any = this.checkCollision({ box: box })
+
+            const finalPosition = this.blockCollision({
+                isCollision: isCollision,
+                x: x,
+                y: y,
+                z: z,
+                box: box
+            })
+
+            x = finalPosition.x
+            y = finalPosition.y
+            z = finalPosition.z
+
+        }
+
+
 
         this.camera.position.set(x, y, z)
         this.player.position = {
@@ -234,25 +296,49 @@ class Scene {
 
     }
 
-    checkCollision() {
-        const box = {
-            minX: 9.5,
-            minY: -1,
-            maxX: 10.5,
-            maxY: 3
+    blockCollision({ isCollision, x, y, z, box }: any) {
+        const padding = 0.5
+        if (isCollision) {
+            if (x > box.minX && x < box.minX + padding) {
+                x = box.minX
+                return { x: x,y: y, z: z }
+            }
+
+            if (x > box.maxX - padding && x < box.maxX) {
+                x = box.maxX
+                return { x: x,y: y, z: z }
+            }
+
+            if (z > box.minY && z < box.minY + padding) {
+                z = box.minY
+                return { x: x,y: y, z: z }
+            }
+
+            if (z > box.maxY - padding && z < box.maxY) {
+                z = box.maxY
+                return { x: x,y: y, z: z }
+            }
         }
 
+        return { x: x,y: y, z: z }
+    }
+
+    checkCollision({ box }: {box: BoxType}) {
+
+
         const playerBox = {
-            minX: this.camera.position.x - 0.5,
-            minY: this.camera.position.z - 0.5,
-            maxX: this.camera.position.x + 0.5,
-            maxY: this.camera.position.z + 0.5
+            minX: this.camera.position.x ,
+            minY: this.camera.position.z ,
+            maxX: this.camera.position.x ,
+            maxY: this.camera.position.z
         }
 
         const isCollide = this.collisionDetect.checkAABB({
             box1: box,
             box2: playerBox
         })
+
+        console.log(isCollide)
 
         return isCollide
 
