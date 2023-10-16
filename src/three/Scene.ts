@@ -227,6 +227,20 @@ class Scene {
     }
 
 
+    updatePlayerDirection() {
+        const vector = this.camera.getWorldDirection(new THREE.Vector3(0,0,0));
+
+        this.player.direction = {
+            x: vector.x,
+            y: vector.y,
+            z: vector.z
+
+        }
+    }
+
+
+
+
     //NOTE: 이후 콜리전 설정과 병합 필요 (임시책)
     playerJump() {
 
@@ -252,9 +266,6 @@ class Scene {
             return 0
         }
 
-
-
-
         const position = this.getPlayerMovePosition()
         this.player.velocity.x = position.x * this.player.speed
         this.player.velocity.z = position.y * this.player.speed
@@ -264,6 +275,12 @@ class Scene {
         const z = this.camera.position.z + this.player.velocity.z
 
         this.camera.position.set(x, y, z)
+        this.player.position = {
+            x:x, y:y, z:z
+        }
+
+        // this.player.direction = this.getCameraDirection().radian
+
     }
 
 
@@ -278,6 +295,7 @@ class Scene {
 
         this.playerMove()
         this.playerJump()
+        this.updatePlayerDirection()
 
 
         this.renderer.render( this.scene, this.camera );
