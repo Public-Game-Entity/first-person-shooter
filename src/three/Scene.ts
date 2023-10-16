@@ -6,7 +6,7 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { Collision } from './Collision';
 
 type BoxType = {
-    minX: number, minY: number, maxX: number, maxY: number
+    minX: number, minY: number, maxX: number, maxY: number, minZ: number, maxZ: number
 }
 
 class Scene {
@@ -114,6 +114,17 @@ class Scene {
             zw: 8
         }})
 
+        this.createCube({ weight: {
+            x: -10,
+            y: 0,
+            z: -10,
+
+            xw: 10,
+            yw: 1,
+            zw: 8
+        }})
+
+
 
                 //     minX: 9,
         //     minY: -2,
@@ -147,9 +158,12 @@ class Scene {
 
         this.collisionArray.push({
             minX: weight.x - weight.xw/2 - 0.5, 
-            minY: weight.z - weight.zw/2 - 0.5,
+            minZ: weight.z - weight.zw/2 - 0.5,
             maxX: weight.x + weight.xw/2 + 0.5, 
-            maxY: weight.z + weight.zw/2 + 0.5,
+            maxZ: weight.z + weight.zw/2 + 0.5,
+
+            maxY: weight.y + weight.yw/2 + 0.5, 
+            minY: weight.y - weight.yw/2 - 0.5,
         })
     }
 
@@ -235,11 +249,11 @@ class Scene {
     playerJump() {
 
 
-        if (this.player.isJump == true && this.camera.position.y < 5) {
+        if (this.player.isJump == true && this.camera.position.y < 50) {
             this.camera.position.y += 0.1
-            this.player.velocity.y += 0.1
+            // this.player.velocity.y += 0.01
         } else {
-            this.player.velocity.y = 0
+            // this.player.velocity.y = this.camera.position.y > 3 ? -0.01 : 0
             this.camera.position.y -= this.camera.position.y > 3 ? 0.1 : 0
         }
     }
@@ -252,15 +266,17 @@ class Scene {
             this.player.isMove = false
         }
         
-        if (this.player.isMove == false) {
-            return 0
-        }
 
 
 
         const position = this.getPlayerMovePosition()
         this.player.velocity.x = (position.x * this.player.speed)  // * (isCollision ? -1 : 1)
         this.player.velocity.z = (position.y * this.player.speed) 
+
+        if (this.player.isMove == false) {
+            this.player.velocity.x = 0
+            this.player.velocity.z = 0
+        }
         
         let x = this.camera.position.x + this.player.velocity.x 
         let y = this.camera.position.y + this.player.velocity.y
@@ -309,13 +325,23 @@ class Scene {
                 return { x: x,y: y, z: z }
             }
 
-            if (z > box.minY && z < box.minY + padding) {
-                z = box.minY
+            if (z > box.minZ && z < box.minZ + padding) {
+                z = box.minZ
                 return { x: x,y: y, z: z }
             }
 
-            if (z > box.maxY - padding && z < box.maxY) {
-                z = box.maxY
+            if (z > box.maxZ - padding && z < box.maxZ) {
+                z = box.maxZ
+                return { x: x,y: y, z: z }
+            }
+
+            if (y > box.minY && y < box.minY + padding) {
+                y = box.minY
+                return { x: x,y: y, z: z }
+            }
+
+            if (y > box.maxY - padding && y < box.maxY) {
+                y = box.maxY
                 return { x: x,y: y, z: z }
             }
         }
@@ -327,18 +353,22 @@ class Scene {
 
 
         const playerBox = {
-            minX: this.camera.position.x ,
-            minY: this.camera.position.z ,
-            maxX: this.camera.position.x ,
-            maxY: this.camera.position.z
+            minX: this.camera.position.x - 1,
+            minZ: this.camera.position.z - 1,
+            maxX: this.camera.position.x +1,
+            maxZ: this.camera.position.z +1,
+            maxY: this.camera.position.y + 1,
+            minY: this.camera.position.y
+
         }
+        
 
         const isCollide = this.collisionDetect.checkAABB({
             box1: box,
             box2: playerBox
         })
 
-        console.log(isCollide)
+        console.log(isCollide, box)
 
         return isCollide
 
