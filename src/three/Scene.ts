@@ -3,6 +3,7 @@ import { Player } from './Player';
 import store from '../store'
 import { setGameOver } from '../features/gameSlice';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import { Collision } from './Collision';
 
 class Scene {
     scene: any
@@ -14,6 +15,7 @@ class Scene {
     activeKeyDown: any[];
     isGameStart: boolean;
     lockControls: PointerLockControls;
+    collisionDetect: Collision;
 
     constructor() {
 
@@ -49,7 +51,7 @@ class Scene {
     
         const clock = new THREE.Clock();
     
-        this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 1, 100 );
+        this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.position.set( 0, 3, 0 );
 
 
@@ -75,12 +77,30 @@ class Scene {
         const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100 ),new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: true} ) );
         mesh.rotation.x = - Math.PI / 2;
         mesh.receiveShadow = true;
+        
         this.scene.add(mesh);
     
         const helper = new THREE.CameraHelper( dirLight.shadow.camera );
         this.scene.add( helper );
+
+        this.collisionDetect = new Collision()
+
+
+        const geometry = new THREE.BoxGeometry( 1, 4, 4 ); 
+        const material = new THREE.MeshStandardMaterial()
+        material.metalness = 0.45
+        material.roughness = 0.65
         
+        const cube = new THREE.Mesh( geometry, material ); 
+        cube.position.set(10,2,1)
+        cube.receiveShadow = true;
+        cube.castShadow = true;
+
+        this.scene.add(cube);
+
         this.animate();
+
+        
 
         document.querySelector("#screen").appendChild( this.renderer.domElement );
         this.lockControls = new PointerLockControls( this.camera, this.renderer.domElement );
@@ -155,6 +175,106 @@ class Scene {
         if (index > -1) this.activeKeyDown.splice(index, 1)
     }
 
+
+
+    updatePlayerDirection() {
+        const vector = this.camera.getWorldDirection(new THREE.Vector3(0,0,0));
+
+        this.player.direction = {
+            x: vector.x,
+            y: vector.y,
+            z: vector.z
+
+        }
+    }
+
+
+    //NOTE: 이후 콜리전 설정과 병합 필요 (임시책)
+    playerJump() {
+
+
+        if (this.player.isJump == true && this.camera.position.y < 5) {
+            this.camera.position.y += 0.1
+            this.player.velocity.y += 0.1
+        } else {
+            this.player.velocity.y = 0
+            this.camera.position.y -= this.camera.position.y > 3 ? 0.1 : 0
+        }
+    }
+
+
+    private playerMove() {
+
+
+        if (this.activeKeyDown.length == 0) {
+            this.player.isMove = false
+        }
+        
+        if (this.player.isMove == false) {
+            return 0
+        }
+
+        const isCollision: any = this.checkCollision()
+
+
+        const position = this.getPlayerMovePosition()
+        this.player.velocity.x = (position.x * this.player.speed) * (isCollision ? -1.2 : 1)
+        this.player.velocity.z = (position.y * this.player.speed) * (isCollision ? -1.2 : 1)
+        
+        const x = this.camera.position.x + this.player.velocity.x 
+        const y = this.camera.position.y + this.player.velocity.y
+        const z = this.camera.position.z + this.player.velocity.z
+
+        this.camera.position.set(x, y, z)
+        this.player.position = {
+            x:x, y:y, z:z
+        }
+
+        // this.player.direction = this.getCameraDirection().radian
+
+    }
+
+    checkCollision() {
+        const box = {
+            minX: 9.5,
+            minY: -1,
+            maxX: 10.5,
+            maxY: 3
+        }
+
+        const playerBox = {
+            minX: this.camera.position.x - 0.5,
+            minY: this.camera.position.z - 0.5,
+            maxX: this.camera.position.x + 0.5,
+            maxY: this.camera.position.z + 0.5
+        }
+
+        const isCollide = this.collisionDetect.checkAABB({
+            box1: box,
+            box2: playerBox
+        })
+
+        return isCollide
+
+    }
+
+
+
+
+    private animate() {
+        requestAnimationFrame( this.animate.bind(this) );
+
+        this.playerMove()
+        this.playerJump()
+        this.updatePlayerDirection()
+
+
+        this.renderer.render( this.scene, this.camera );
+    }
+
+
+
+
     private handleKeyDown(e: any) {
         const speed = 0.1
         console.log(e.code)
@@ -226,84 +346,11 @@ class Scene {
         functionKey[e.code]()
     }
 
-
-    updatePlayerDirection() {
-        const vector = this.camera.getWorldDirection(new THREE.Vector3(0,0,0));
-
-        this.player.direction = {
-            x: vector.x,
-            y: vector.y,
-            z: vector.z
-
-        }
-    }
-
-
-
-
-    //NOTE: 이후 콜리전 설정과 병합 필요 (임시책)
-    playerJump() {
-
-
-        if (this.player.isJump == true && this.camera.position.y < 5) {
-            this.camera.position.y += 0.1
-            this.player.velocity.y += 0.1
-        } else {
-            this.player.velocity.y = 0
-            this.camera.position.y -= this.camera.position.y > 3 ? 0.1 : 0
-        }
-    }
-
-
-    private playerMove() {
-
-
-        if (this.activeKeyDown.length == 0) {
-            this.player.isMove = false
-        }
-        
-        if (this.player.isMove == false) {
-            return 0
-        }
-
-        const position = this.getPlayerMovePosition()
-        this.player.velocity.x = position.x * this.player.speed
-        this.player.velocity.z = position.y * this.player.speed
-        
-        const x = this.camera.position.x + this.player.velocity.x
-        const y = this.camera.position.y + this.player.velocity.y
-        const z = this.camera.position.z + this.player.velocity.z
-
-        this.camera.position.set(x, y, z)
-        this.player.position = {
-            x:x, y:y, z:z
-        }
-
-        // this.player.direction = this.getCameraDirection().radian
-
-    }
-
-
     private handleWindowResize() {
         this.camera.aspect = window.innerWidth / window.innerHeight
         this.camera.updateProjectionMatrix()
         this.renderer.setSize(window.innerWidth, window.innerHeight)
     }
-
-    private animate() {
-        requestAnimationFrame( this.animate.bind(this) );
-
-        this.playerMove()
-        this.playerJump()
-        this.updatePlayerDirection()
-
-
-        this.renderer.render( this.scene, this.camera );
-    }
-
-
-
-
 
 }
 

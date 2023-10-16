@@ -124,9 +124,9 @@ class Bullet {
 
     move() {
         
-        this.model.position.x += this.direction.x / 30
-        this.model.position.y += this.direction.y / 30
-        this.model.position.z += this.direction.z / 30
+        this.model.position.x += this.direction.x / 3
+        this.model.position.y += this.direction.y / 3
+        this.model.position.z += this.direction.z / 3
 
         // this.model.position.z += Math.sin(this.direction) / 30
 
