@@ -120,7 +120,7 @@ class Scene {
             z: -10,
 
             xw: 10,
-            yw: 1,
+            yw: 6,
             zw: 8
         }})
 
@@ -246,7 +246,7 @@ class Scene {
 
 
     //NOTE: 이후 콜리전 설정과 병합 필요 (임시책)
-    playerJump() {
+    updatePlayerJump() {
 
 
         if (this.player.isJump == true && this.camera.position.y < 50) {
@@ -259,28 +259,30 @@ class Scene {
     }
 
 
-    private playerMove() {
-
-
+    private updatePlayerMove() {
         if (this.activeKeyDown.length == 0) {
             this.player.isMove = false
         }
         
-
-
-
+        const dt = 1/60
+        const k = 0.92
         const position = this.getPlayerMovePosition()
-        this.player.velocity.x = (position.x * this.player.speed)  // * (isCollision ? -1 : 1)
-        this.player.velocity.z = (position.y * this.player.speed) 
+        this.player.acceleration.x = (position.x * this.player.speed * 100) - (k * this.player.velocity.x)
+        this.player.acceleration.z = (position.y * this.player.speed * 100) - (k * this.player.velocity.z)  
+
 
         if (this.player.isMove == false) {
-            this.player.velocity.x = 0
-            this.player.velocity.z = 0
+            this.player.acceleration.x = 0
+            this.player.acceleration.z = 0
         }
+
+        this.player.velocity.x += this.player.acceleration.x * dt
+        this.player.velocity.y += this.player.acceleration.y * dt
+        this.player.velocity.z +=  this.player.acceleration.z * dt
         
-        let x = this.camera.position.x + this.player.velocity.x 
-        let y = this.camera.position.y + this.player.velocity.y
-        let z = this.camera.position.z + this.player.velocity.z
+        let x = this.camera.position.x + this.player.velocity.x * dt
+        let y = this.camera.position.y + this.player.velocity.y * dt
+        let z = this.camera.position.z + this.player.velocity.z * dt
 
         for (let index = 0; index < this.collisionArray.length; index++) {
             const box = this.collisionArray[index];
@@ -298,10 +300,7 @@ class Scene {
             x = finalPosition.x
             y = finalPosition.y
             z = finalPosition.z
-
         }
-
-
 
         this.camera.position.set(x, y, z)
         this.player.position = {
@@ -335,13 +334,14 @@ class Scene {
                 return { x: x,y: y, z: z }
             }
 
+
             if (y > box.minY && y < box.minY + padding) {
                 y = box.minY
                 return { x: x,y: y, z: z }
             }
 
-            if (y > box.maxY - padding && y < box.maxY) {
-                y = box.maxY
+            if (y > (box.maxY+2) - padding && y < (box.maxY+2)) {
+                y = (box.maxY+2)
                 return { x: x,y: y, z: z }
             }
         }
@@ -350,28 +350,21 @@ class Scene {
     }
 
     checkCollision({ box }: {box: BoxType}) {
-
-
         const playerBox = {
             minX: this.camera.position.x - 1,
             minZ: this.camera.position.z - 1,
             maxX: this.camera.position.x +1,
             maxZ: this.camera.position.z +1,
             maxY: this.camera.position.y + 1,
-            minY: this.camera.position.y
-
+            minY: this.camera.position.y - 3
         }
         
-
         const isCollide = this.collisionDetect.checkAABB({
             box1: box,
             box2: playerBox
         })
 
-        console.log(isCollide, box)
-
         return isCollide
-
     }
 
 
@@ -380,8 +373,8 @@ class Scene {
     private animate() {
         requestAnimationFrame( this.animate.bind(this) );
 
-        this.playerMove()
-        this.playerJump()
+        this.updatePlayerMove()
+        this.updatePlayerJump()
         this.updatePlayerDirection()
 
 
@@ -402,14 +395,17 @@ class Scene {
             },
             "KeyS": () => {
                 this.pushActiveKey({ keyCode: e.code })
+
                 this.player.isMove = true
             },
             "KeyD": () => {
                 this.pushActiveKey({ keyCode: e.code })
+
                 this.player.isMove = true
             },
             "KeyA": () => {
                 this.pushActiveKey({ keyCode: e.code })
+
                 this.player.isMove = true
             },
             "ShiftLeft": () => {
@@ -435,12 +431,15 @@ class Scene {
             },
             "KeyD": () => {
                 this.removeActiveKey({ keyCode: e.code })
+
             },
             "KeyW": () => {
                 this.removeActiveKey({ keyCode: e.code })
+
             },
             "KeyS": () => {
                 this.removeActiveKey({ keyCode: e.code })
+
             },
             "ShiftLeft": () => {
                 this.player.speedDown()

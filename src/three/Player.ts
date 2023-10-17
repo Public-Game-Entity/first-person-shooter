@@ -13,6 +13,7 @@ class Player {
     gun: Gun;
     position: { x: number; y: number; z: number; };
     direction: { x: number; y: number; z: number; };
+    acceleration: { x: number; y: number; z: number; };
 
     constructor(scene: any) {
         this.model = undefined
@@ -22,6 +23,12 @@ class Player {
 
         this.speed = 0.1
         this.direction = {
+            x: 0, 
+            y: 0,
+            z: 0
+        }
+
+        this.acceleration = {
             x: 0, 
             y: 0,
             z: 0
@@ -82,13 +89,11 @@ class Gun {
         if (this.isLock == true) {
             return 0
         }
-        console.log("DDD", direction)
         const newBullet = new Bullet({
             position: position,
             direction: direction
         })
         this.scene.add(newBullet.model)
-        console.log("D")
     }
 }
 
@@ -105,11 +110,9 @@ class Bullet {
         this.model.position.x = this.position.x
         this.model.position.y = this.position.y
         this.model.position.z = this.position.z
-        // this.model.rotation.y = direction
-        // this.model.rotation.set(direction)
-        var mx = new THREE.Matrix4().lookAt(direction,new THREE.Vector3(0,0,0),new THREE.Vector3(0,1,0));
-        var qt = new THREE.Quaternion().setFromRotationMatrix(mx);
-        console.log(qt)
+
+        const mx = new THREE.Matrix4().lookAt(direction,new THREE.Vector3(0,0,0),new THREE.Vector3(0,1,0));
+        const qt = new THREE.Quaternion().setFromRotationMatrix(mx);
         this.model.rotation.setFromQuaternion( qt )
 
         this.animate()
@@ -127,8 +130,6 @@ class Bullet {
         this.model.position.x += this.direction.x / 3
         this.model.position.y += this.direction.y / 3
         this.model.position.z += this.direction.z / 3
-
-        // this.model.position.z += Math.sin(this.direction) / 30
 
     }
 
