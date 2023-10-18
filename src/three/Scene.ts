@@ -249,13 +249,14 @@ class Scene {
     updatePlayerJump() {
 
 
-        if (this.player.isJump == true && this.camera.position.y < 50) {
-            this.camera.position.y += 0.1
-            // this.player.velocity.y += 0.01
-        } else {
-            // this.player.velocity.y = this.camera.position.y > 3 ? -0.01 : 0
-            this.camera.position.y -= this.camera.position.y > 3 ? 0.1 : 0
-        }
+        // if (this.player.isJump == true && this.camera.position.y < 50) {
+        //     this.player.acceleration.y = 100
+        //     // this.player.velocity.y += 0.01
+        // } else {
+        //     this.player.acceleration.y = -9.8
+
+        //     // this.camera.position.y -= this.camera.position.y > 3 ? 0.1 : 0
+        // }
     }
 
 
@@ -265,20 +266,32 @@ class Scene {
         }
         
         const dt = 1/60
-        const k = 0.92
+        const k = 0.9
+        const m = 2
         const position = this.getPlayerMovePosition()
-        this.player.acceleration.x = (position.x * this.player.speed * 100) - (k * this.player.velocity.x)
-        this.player.acceleration.z = (position.y * this.player.speed * 100) - (k * this.player.velocity.z)  
 
+
+        if (this.player.isJump == true && this.camera.position.y < 50) {
+            this.player.acceleration.y = 30
+            this.player.velocity.y = 5
+        } else {
+            this.player.acceleration.y = (-9.8 * m) - (k * this.player.velocity.y)
+        }
+        
+        this.player.acceleration.x = (position.x * this.player.speed * 500) - (k * this.player.velocity.x)
+        this.player.acceleration.z = (position.y * this.player.speed * 500) - (k * this.player.velocity.z)  
 
         if (this.player.isMove == false) {
             this.player.acceleration.x = 0
             this.player.acceleration.z = 0
         }
 
+        this.player.velocity.x /= 1.1
+        this.player.velocity.z /= 1.1
+
         this.player.velocity.x += this.player.acceleration.x * dt
         this.player.velocity.y += this.player.acceleration.y * dt
-        this.player.velocity.z +=  this.player.acceleration.z * dt
+        this.player.velocity.z += this.player.acceleration.z * dt
         
         let x = this.camera.position.x + this.player.velocity.x * dt
         let y = this.camera.position.y + this.player.velocity.y * dt
@@ -301,6 +314,9 @@ class Scene {
             y = finalPosition.y
             z = finalPosition.z
         }
+
+        y = y >= 3 ? y : 3
+
 
         this.camera.position.set(x, y, z)
         this.player.position = {
