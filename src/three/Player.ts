@@ -17,7 +17,7 @@ class Player {
     direction: { x: number; y: number; z: number; };
     acceleration: { x: number; y: number; z: number; };
 
-    constructor(scene: any) {
+    constructor(scene: any, camera: any) {
         this.model = undefined
         
         this.isMove = false
@@ -51,7 +51,7 @@ class Player {
 
         this.scene = scene
 
-        this.gun = new Gun(scene)
+        this.gun = new Gun(scene, camera)
 
         document.querySelector("#screen").addEventListener("click", (e) => {
             this.gun.shot({
@@ -60,6 +60,7 @@ class Player {
             })
 
             this.gun.isLock = false
+  
 
         })
 
@@ -83,12 +84,14 @@ class Gun {
     scene: any;
     isLock: boolean;
     isAvailableModel: boolean;
+    camera: any;
 
-    constructor(scene: any) {
+    constructor(scene: any, camera: any) {
         this.scene = scene
         this.model = undefined
         this.isLock = true
         this.isAvailableModel = false
+        this.camera = camera
 
         this.loadModel()
     }
@@ -106,7 +109,8 @@ class Gun {
             this.model.scale.y = scale
             this.model.scale.z = scale
 
-            this.scene.add(this.model)
+            // this.scene.add(this.model)
+            this.camera.add(this.model)
             this.isAvailableModel = true
         } );
     }
@@ -115,6 +119,7 @@ class Gun {
         if (this.isLock == true) {
             return 0
         }
+
         const newBullet = new Bullet({
             position: position,
             direction: direction

@@ -21,6 +21,7 @@ class Scene {
     lockControls: PointerLockControls;
     collisionDetect: Collision;
     collisionArray: any[]
+    lastPlayerRadian: number;
 
     constructor() {
 
@@ -53,15 +54,15 @@ class Scene {
         this.scene.background = new THREE.Color( 0x000000 );
         this.scene.fog = new THREE.Fog( 0xa0a0a0, 10, 50 );
 
-        this.player = new Player(this.scene)
     
         const clock = new THREE.Clock();
     
         this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 100 );
         this.camera.position.set( 0, 3, 0 );
-
-
         this.scene.add(this.camera);
+
+        this.player = new Player(this.scene, this.camera)
+
     
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -260,11 +261,24 @@ class Scene {
     }
 
     updatePlayerEquipment({ direction }: any) {
+
+        if (this.player.isMove) {
+            this.lastPlayerRadian = this.getRadianFromActiveKey()
+
+        }
         if (this.player.gun.isAvailableModel) {
-            this.player.gun.model.position.set(this.camera.position.x + this.player.direction.x * 1, this.camera.position.y + this.player.direction.y - 0.8, this.camera.position.z + this.player.direction.z * 1)
-            this.player.gun.model.rotation.y = Math.atan2(this.player.direction.x, this.player.direction.z) + Math.PI/5
-            // this.player.gun.model.rotation.x = Math.PI/2
-            // this.player.gun.model.rotation.z = Math.PI/2
+            const r = this.lastPlayerRadian + Math.PI/2
+            const m = Math.abs(this.player.velocity.x + this.player.velocity.z )
+            const nx = Math.cos(r) * m * 0.02
+            const nz = Math.sin(r) * m * 0.02
+
+            this.player.gun.model.position.set(1 + nx, - 0.8, -1 + nz)
+            this.player.gun.model.rotation.y = Math.PI + Math.PI/20
+
+            // this.player.gun.model.rotation.x = 0.79 
+
+            // this.player.gun.model.rotation.z = this.player.direction.y
+            console.log(r)
 
         }
     }
