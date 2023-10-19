@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
 import store from '../store';
 
 
@@ -56,7 +58,9 @@ class Player {
                 position: this.position,
                 direction: this.direction
             })
+
             this.gun.isLock = false
+
         })
 
     }
@@ -78,14 +82,36 @@ class Gun {
     model: any;
     scene: any;
     isLock: boolean;
+    isAvailableModel: boolean;
 
     constructor(scene: any) {
         this.scene = scene
         this.model = undefined
         this.isLock = true
+        this.isAvailableModel = false
+
+        this.loadModel()
     }
 
-    shot({ position, direction }: any) {
+
+    // "Custom M4A1 COD Warzone" (https://skfb.ly/oLs6M) by BRAVO6Ghost is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+    private loadModel() {
+        const loader = new GLTFLoader();
+        const scale = 0.05
+
+        loader.load('/public/gun.glb', ( gltf ) => {
+
+            this.model = gltf.scene;
+            this.model.scale.x = scale
+            this.model.scale.y = scale
+            this.model.scale.z = scale
+
+            this.scene.add(this.model)
+            this.isAvailableModel = true
+        } );
+    }
+
+    public shot({ position, direction }: any) {
         if (this.isLock == true) {
             return 0
         }
@@ -118,14 +144,14 @@ class Bullet {
         this.animate()
     }
 
-    addModel() {
+    private addModel() {
         const geometry = new THREE.BoxGeometry( 0.1, 0.1, 1 ); 
         const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
         const cube = new THREE.Mesh( geometry, material ); 
         return cube
     }
 
-    move() {
+    private move() {
         
         this.model.position.x += this.direction.x / 3
         this.model.position.y += this.direction.y / 3
@@ -133,7 +159,7 @@ class Bullet {
 
     }
 
-    animate() {
+    private animate() {
         requestAnimationFrame( this.animate.bind(this) );
 
         this.move()

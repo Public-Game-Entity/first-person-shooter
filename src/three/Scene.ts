@@ -259,6 +259,16 @@ class Scene {
         // }
     }
 
+    updatePlayerEquipment({ direction }: any) {
+        if (this.player.gun.isAvailableModel) {
+            this.player.gun.model.position.set(this.camera.position.x + this.player.direction.x * 1, this.camera.position.y + this.player.direction.y - 0.8, this.camera.position.z + this.player.direction.z * 1)
+            this.player.gun.model.rotation.y = Math.atan2(this.player.direction.x, this.player.direction.z) + Math.PI/5
+            // this.player.gun.model.rotation.x = Math.PI/2
+            // this.player.gun.model.rotation.z = Math.PI/2
+
+        }
+    }
+
 
     private updatePlayerMove() {
         if (this.activeKeyDown.length == 0) {
@@ -269,6 +279,9 @@ class Scene {
         const k = 0.9
         const m = 2
         const position = this.getPlayerMovePosition()
+
+        this.updatePlayerEquipment({ direction: position })
+
 
 
         if (this.player.isJump == true && this.camera.position.y < 50) {
