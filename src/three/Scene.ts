@@ -264,21 +264,27 @@ class Scene {
 
         if (this.player.isMove) {
             this.lastPlayerRadian = this.getRadianFromActiveKey()
-
         }
+
         if (this.player.gun.isAvailableModel) {
-            const r = this.lastPlayerRadian + Math.PI/2
-            const m = Math.abs(this.player.velocity.x + this.player.velocity.z )
-            const nx = Math.cos(r) * m * 0.02
-            const nz = Math.sin(r) * m * 0.02
+            const m = Math.abs((this.player.velocity.x + this.player.velocity.z) ) / 100
+            const nx = (Math.cos(this.lastPlayerRadian + Math.PI/2)  * m )/2
+            const nz = (Math.sin(this.lastPlayerRadian + Math.PI/2) * m )/2
 
-            this.player.gun.model.position.set(1 + nx, - 0.8, -1 + nz)
-            this.player.gun.model.rotation.y = Math.PI + Math.PI/20
+            console.log(this.player.gun.aim.aimRate)
+            this.player.gun.aim.aimRate -= 0.01
 
-            // this.player.gun.model.rotation.x = 0.79 
+            if (this.player.gun.aim.isAim) {
+                this.player.gun.model.position.set(0 + nx, - 0.4 , 0+ nz )
 
-            // this.player.gun.model.rotation.z = this.player.direction.y
-            console.log(r)
+                this.player.gun.model.rotation.y = Math.PI
+
+            } else {
+                this.player.gun.model.position.set(1 + nx, - 0.8 , -1 + nz)
+
+                this.player.gun.model.rotation.y = Math.PI + Math.PI/20
+
+            }
 
         }
     }

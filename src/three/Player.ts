@@ -16,6 +16,7 @@ class Player {
     position: { x: number; y: number; z: number; };
     direction: { x: number; y: number; z: number; };
     acceleration: { x: number; y: number; z: number; };
+    timeoutAim: NodeJS.Timeout;
 
     constructor(scene: any, camera: any) {
         this.model = undefined
@@ -59,6 +60,15 @@ class Player {
                 direction: this.direction
             })
 
+
+            clearTimeout(this.timeoutAim)
+            this.gun.aim.isAim = true
+
+            this.timeoutAim = setTimeout(() => {
+                this.gun.aim.isAim = false
+
+            }, 500)
+
             this.gun.isLock = false
   
 
@@ -85,6 +95,7 @@ class Gun {
     isLock: boolean;
     isAvailableModel: boolean;
     camera: any;
+    aim: { isAim: boolean; aimRate: number; };
 
     constructor(scene: any, camera: any) {
         this.scene = scene
@@ -92,6 +103,10 @@ class Gun {
         this.isLock = true
         this.isAvailableModel = false
         this.camera = camera
+        this.aim = {
+            isAim: false,
+            aimRate: 0
+        }
 
         this.loadModel()
     }
@@ -157,10 +172,10 @@ class Bullet {
     }
 
     private move() {
-        
-        this.model.position.x += this.direction.x / 3
-        this.model.position.y += this.direction.y / 3
-        this.model.position.z += this.direction.z / 3
+        const speed = 1
+        this.model.position.x += this.direction.x * speed
+        this.model.position.y += this.direction.y * speed
+        this.model.position.z += this.direction.z * speed
 
     }
 
