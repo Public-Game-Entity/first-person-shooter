@@ -124,7 +124,6 @@ class Gun {
             this.model.scale.y = scale
             this.model.scale.z = scale
 
-            // this.scene.add(this.model)
             this.camera.add(this.model)
             this.isAvailableModel = true
         } );

@@ -268,24 +268,20 @@ class Scene {
 
         if (this.player.gun.isAvailableModel) {
             const m = Math.abs((this.player.velocity.x + this.player.velocity.z) ) / 100
-            const nx = (Math.cos(this.lastPlayerRadian + Math.PI/2)  * m )/2
+            const nx = (Math.cos(this.lastPlayerRadian + Math.PI/2) * m )/2
             const nz = (Math.sin(this.lastPlayerRadian + Math.PI/2) * m )/2
-
-            console.log(this.player.gun.aim.aimRate)
-            this.player.gun.aim.aimRate -= 0.01
+            const x = Number.isNaN(nx) ? 0 : nx
+            const z = Number.isNaN(nz) ? 0 : nz
 
             if (this.player.gun.aim.isAim) {
-                this.player.gun.model.position.set(0 + nx, - 0.4 , 0+ nz )
-
+                this.player.gun.model.position.set((1-this.player.gun.aim.aimRate) + x, - (0.8 * (1/(this.player.gun.aim.aimRate+1))) , (1-this.player.gun.aim.aimRate) + z )
                 this.player.gun.model.rotation.y = Math.PI
-
+                this.player.gun.aim.aimRate = this.player.gun.aim.aimRate >= 1 ? 1 : this.player.gun.aim.aimRate + 0.1
             } else {
-                this.player.gun.model.position.set(1 + nx, - 0.8 , -1 + nz)
-
+                this.player.gun.model.position.set((1-this.player.gun.aim.aimRate) + x, - (0.8 * (1/(this.player.gun.aim.aimRate+1))) , (-1-this.player.gun.aim.aimRate) + z)
                 this.player.gun.model.rotation.y = Math.PI + Math.PI/20
-
+                this.player.gun.aim.aimRate = this.player.gun.aim.aimRate <= 0 ? 0 : this.player.gun.aim.aimRate - 0.1
             }
-
         }
     }
 
